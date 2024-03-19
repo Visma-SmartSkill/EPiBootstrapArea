@@ -44,6 +44,18 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
         _fallbacks = displayOptions;
     }
 
+    internal bool ShouldRenderInnerContainer(IHtmlHelper htmlHelper)
+    {
+        var nullable = (bool?) htmlHelper.ViewContext.ViewData["hasinnercontainer"];
+        return !nullable.HasValue || nullable.Value;
+    }
+
+    internal string GetInnerContainerTag(IHtmlHelper htmlHelper, ContentArea contentArea)
+    {
+        var str = htmlHelper.ViewContext.ViewData["innercontainertag"] as string;
+        return !string.IsNullOrEmpty(str) ? str : "div";
+    }
+
     public override void Render(IHtmlHelper htmlHelper, ContentArea contentArea)
     {
         if (contentArea == null || contentArea.IsEmpty)
@@ -63,28 +75,45 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
 
         var viewContext = htmlHelper.ViewContext;
         TagBuilder tagBuilder = null;
+        TagBuilder innerContainer = null;
 
-        if (!IsInEditMode() && ShouldRenderWrappingElement(htmlHelper))
+        if (!IsInEditMode())
         {
-            tagBuilder = new TagBuilder(GetContentAreaHtmlTag(htmlHelper, contentArea));
-            AddNonEmptyCssClass(tagBuilder, viewContext.ViewData["cssclass"] as string);
-
-            if (Options.AutoAddRow)
+            if (ShouldRenderWrappingElement(htmlHelper))
             {
-                AddNonEmptyCssClass(tagBuilder, "row");
+                tagBuilder = new TagBuilder(GetContentAreaHtmlTag(htmlHelper, contentArea));
+                AddNonEmptyCssClass(tagBuilder, viewContext.ViewData["cssclass"] as string);
+
+                if (Options.AutoAddRow)
+                {
+                    AddNonEmptyCssClass(tagBuilder, "row");
+                }
+
+                viewContext.Writer.Write(tagBuilder.RenderStartTag());
             }
 
-            viewContext.Writer.Write(tagBuilder.RenderStartTag());
+            if (ShouldRenderInnerContainer(htmlHelper))
+            {
+                innerContainer = new TagBuilder(GetInnerContainerTag(htmlHelper, contentArea));
+                var innerCssClass = viewContext.ViewData["innercontainercssclass"] as string;
+                if (!string.IsNullOrEmpty(innerCssClass))
+                {
+                    AddNonEmptyCssClass(innerContainer, innerCssClass);
+                }
+                viewContext.Writer.Write(innerContainer.RenderStartTag());
+            }
         }
 
         RenderContentAreaItems(htmlHelper, contentArea.FilteredItems);
 
-        if (tagBuilder == null)
+        if (innerContainer != null)
         {
-            return;
+            viewContext.Writer.Write(innerContainer.RenderEndTag());
         }
-
-        viewContext.Writer.Write(tagBuilder.RenderEndTag());
+        if (tagBuilder != null)
+        {
+            viewContext.Writer.Write(tagBuilder.RenderEndTag());
+        }
     }
 
     protected override void RenderContentAreaItems(IHtmlHelper htmlHelper, IEnumerable<ContentAreaItem> contentAreaItems)
