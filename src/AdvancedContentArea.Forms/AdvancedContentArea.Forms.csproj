@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Version>6.0.1</Version>
     <PackageVersion>6.0.1</PackageVersion>
     <AssemblyVersion>6.0.1.0</AssemblyVersion>
@@ -29,11 +29,14 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="EPiServer.CMS.AspNetCore" Version="12.11.0" />
-    <PackageReference Include="EPiServer.CMS.AspNetCore.HtmlHelpers" Version="12.11.0" />
-    <PackageReference Include="EPiServer.CMS.UI.Core" Version="12.15.0" />
-    <PackageReference Include="EPiServer.Forms" Version="5.4.0" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    <PackageReference Include="EPiServer.CMS.AspNetCore" Version="13.0.2" />
+    <PackageReference Include="EPiServer.CMS.AspNetCore.HtmlHelpers" Version="13.0.2" />
+    <PackageReference Include="EPiServer.CMS.UI.Core" Version="13.0.2" />
+    <PackageReference Include="EPiServer.Cms.TinyMce" Version="13.0.2" />
+    <PackageReference Include="EPiServer.Forms" Version="6.0.0" />
+    <PackageReference Include="MailKit" Version="4.16.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.203" PrivateAssets="All" />
   </ItemGroup>
 
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">

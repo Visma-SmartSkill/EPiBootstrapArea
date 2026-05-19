@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using EPiServer;
 using EPiServer.Core;
+using EPiServer.Web;
 using EPiServer.Web.Mvc.Html;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -19,14 +20,18 @@ namespace TechFellow.Optimizely.AdvancedContentArea;
 
 public class AdvancedContentAreaRenderer : ContentAreaRenderer
 {
-    private IContent _currentContent;
-    private Action<HtmlNode, ContentAreaItem, IContent> _elementStartTagRenderCallback;
+    private ContentAreaItem _currentContent;
+    private Action<HtmlNode, ContentAreaItem, IContentData> _elementStartTagRenderCallback;
     private IEnumerable<DisplayModeFallback> _fallbacks;
+    private readonly IContentAreaLoader _contentAreaLoader;
     internal readonly AdvancedContentAreaRendererOptions Options;
 
-    public AdvancedContentAreaRenderer(IReadOnlyCollection<DisplayModeFallback> fallbacks, AdvancedContentAreaRendererOptions options)
+    public AdvancedContentAreaRenderer(
+        IContentAreaLoader contentAreaLoader,
+        IReadOnlyCollection<DisplayModeFallback> fallbacks, AdvancedContentAreaRendererOptions options)
     {
         _fallbacks = fallbacks ?? throw new ArgumentNullException(nameof(fallbacks));
+        _contentAreaLoader = contentAreaLoader ?? throw new ArgumentNullException(nameof(contentAreaLoader));
         Options = options;
     }
 
@@ -34,7 +39,7 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
 
     public string DefaultContentAreaDisplayOption { get; private set; }
 
-    internal void SetElementStartTagRenderCallback(Action<HtmlNode, ContentAreaItem, IContent> callback)
+    internal void SetElementStartTagRenderCallback(Action<HtmlNode, ContentAreaItem, IContentData> callback)
     {
         _elementStartTagRenderCallback = callback;
     }
@@ -77,7 +82,7 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
             viewContext.Writer.Write(tagBuilder.RenderStartTag());
         }
 
-        RenderContentAreaItems(htmlHelper, contentArea.FilteredItems);
+        RenderContentAreaItems(htmlHelper, contentArea.Items);
 
         if (tagBuilder == null)
         {
@@ -107,6 +112,12 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
                          base.RenderContentAreaItems);
     }
 
+    private IContentData? GetAreaItemContent(ContentAreaItem contentAreaItem)
+    {
+        if (contentAreaItem == null) return null;
+        return _contentAreaLoader.LoadContent(contentAreaItem);
+    }
+
     protected override void RenderContentAreaItem(
         IHtmlHelper htmlHelper,
         ContentAreaItem contentAreaItem,
@@ -123,7 +134,7 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
             htmlHelper.ViewContext.ViewData[Constants.BlockIndexViewDataKey] =
                 (int?)htmlHelper.ViewContext.ViewData[Constants.BlockIndexViewDataKey] + 1 ?? 0;
 
-            var content = contentAreaItem.GetContent();
+            var content = GetAreaItemContent(contentAreaItem);
 
             // persist selected DisplayOption for content template usage (if needed there of course)
 
@@ -159,7 +170,7 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
     private void ProcessItemContent(
         string contentItemContent,
         ContentAreaItem contentAreaItem,
-        IContent content,
+        IContentData content,
         IHtmlHelper htmlHelper,
         TextWriter originalWriter)
     {
@@ -220,7 +231,7 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
         if (!string.IsNullOrEmpty(templateTag)) { return templateTag; }
 
         // let's try to find default display options - when set to "Automatic" (meaning that tag is empty for the content)
-        var currentContent = GetCurrentContent(contentAreaItem);
+        var currentContent = GetAreaItemContent(GetCurrentContent(contentAreaItem));
         var attribute = currentContent?.GetOriginalType().GetCustomAttribute<DefaultDisplayOptionAttribute>();
 
         if (attribute != null) { return attribute.DisplayOption; }
@@ -232,11 +243,11 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
             : templateTag;
     }
 
-    protected virtual IContent GetCurrentContent(ContentAreaItem contentAreaItem)
+    protected virtual ContentAreaItem GetCurrentContent(ContentAreaItem contentAreaItem)
     {
         if (_currentContent == null || !_currentContent.ContentLink.CompareToIgnoreWorkID(contentAreaItem.ContentLink))
         {
-            _currentContent = contentAreaItem.GetContent();
+            _currentContent = contentAreaItem;
         }
 
         return _currentContent;
@@ -269,7 +280,7 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
         if (!string.IsNullOrEmpty(ContentAreaTag) && tagName.Equals(ContentAreaTag))
         {
             // we also might have defined default display options for particular CA tag (Html.PropertyFor(m => m.ContentArea, new { tag = ... }))
-            var currentContent = GetCurrentContent(contentAreaItem);
+            var currentContent = GetAreaItemContent(GetCurrentContent(contentAreaItem));
             var defaultAttribute = currentContent?.GetOriginalType()
                 .GetCustomAttributes<DefaultDisplayOptionForTagAttribute>()
                 .FirstOrDefault(a => a.Tag == ContentAreaTag);
@@ -326,9 +337,9 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
                 .Where(s => !string.IsNullOrEmpty(s)));
     }
 
-    private static string GetTypeSpecificCssClasses(ContentAreaItem contentAreaItem)
+    private string GetTypeSpecificCssClasses(ContentAreaItem contentAreaItem)
     {
-        var content = contentAreaItem.GetContent();
+        var content = GetAreaItemContent(contentAreaItem);
         var cssClass = content?.GetOriginalType().Name.ToLowerInvariant() ?? string.Empty;
 
         // ReSharper disable once SuspiciousTypeConversion.Global
@@ -355,7 +366,7 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
     private bool CallbackOnItemNode(
         string contentItemContent,
         ContentAreaItem contentAreaItem,
-        IContent content,
+        IContentData content,
         ref HtmlNode blockContentNode)
     {
         // should we process start element node via callback?
@@ -398,7 +409,7 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
 
     private bool ControlItemVisibility(
         string contentItemContent,
-        IContent content,
+        IContentData content,
         TextWriter originalWriter,
         ref HtmlNode blockContentNode)
     {

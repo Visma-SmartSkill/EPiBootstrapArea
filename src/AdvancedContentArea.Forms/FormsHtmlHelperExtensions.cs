@@ -6,12 +6,14 @@ using EPiServer.Forms.Core;
 using EPiServer.Forms.Core.Models;
 using EPiServer.Forms.Implementation.Elements;
 using EPiServer.ServiceLocation;
+using EPiServer.Web;
 using EPiServer.Web.Mvc.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using TechFellow.Optimizely.AdvancedContentArea.Initialization;
-using TechFellow.Optimizely.AdvancedContentArea.Providers;
+using DisplayOptions = TechFellow.Optimizely.AdvancedContentArea.Providers.DisplayOptions;
 
 namespace TechFellow.Optimizely.AdvancedContentArea.Forms;
 
@@ -38,8 +40,10 @@ public static class FormsHtmlHelperExtensions
         // this means that somebody else took renderer seat and we need to find way around it
         // essentially the only thing that is needed is access to renderer instance - we can create one from scratch here also
         var renderer = ServiceLocator.Current.GetInstance<ContentAreaRenderer>() as AdvancedContentAreaRenderer
-                       ?? new AdvancedContentAreaRenderer(new List<DisplayModeFallback>(DisplayOptions.Default),
-                                                          new AdvancedContentAreaRendererOptions());
+            ?? new AdvancedContentAreaRenderer(
+                ServiceLocator.Current.GetRequiredService<IContentAreaLoader>(),
+                new List<DisplayModeFallback>(DisplayOptions.Default),
+                new AdvancedContentAreaRendererOptions());
 
         var additionalParameters = new RouteValueDictionary(additionalValues);
 
@@ -79,7 +83,6 @@ public static class FormsHtmlHelperExtensions
         foreach (var item in contentAreaItems)
         {
             var formElement = formElements.FirstOrDefault(fe => fe.SourceContent.ContentLink == item.ContentLink);
-
             RenderAreaItem(html, item, bootstrapAwareContentAreaRenderer, formElement);
         }
     }

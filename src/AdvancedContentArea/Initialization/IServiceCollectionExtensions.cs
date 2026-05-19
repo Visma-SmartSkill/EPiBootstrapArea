@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EPiServer;
 using EPiServer.Web;
 using EPiServer.Web.Mvc.Html;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +42,7 @@ public static class IServiceCollectionExtensions
             {
                 var o = sp.GetRequiredService<AdvancedContentAreaRendererOptions>();
                 var renderer = new AdvancedContentAreaRenderer(
+                    sp.GetRequiredService<IContentAreaLoader>(),
                     sp.GetRequiredService<IReadOnlyCollection<DisplayModeFallback>>(),
                     o);
 

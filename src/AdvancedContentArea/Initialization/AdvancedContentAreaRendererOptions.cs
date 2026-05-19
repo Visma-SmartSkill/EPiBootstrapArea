@@ -16,5 +16,5 @@ public class AdvancedContentAreaRendererOptions
 
     public bool AutoAddRow { get; set; }
 
-    public Action<HtmlNode, ContentAreaItem, IContent> ItemStartRenderCallback { get; set; }
+    public Action<HtmlNode, ContentAreaItem, IContentData> ItemStartRenderCallback { get; set; }
 }

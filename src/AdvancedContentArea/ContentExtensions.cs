@@ -8,10 +8,15 @@ namespace TechFellow.Optimizely.AdvancedContentArea;
 
 public static class ContentExtensions
 {
-    public static string GetContentBookmarkName(this IContent content)
+    public static string GetContentBookmarkName(this IContentData content)
     {
-        return content.GetOriginalType().Name.ToLowerInvariant()
-               + "_"
-               + content.ContentLink;
+        if (content is IContent iContent)
+        {
+            return iContent.GetOriginalType().Name.ToLowerInvariant()
+                + "_"
+                + iContent.ContentLink;
+
+        }
+        return content.GetOriginalType().Name.ToLowerInvariant();
     }
 }
