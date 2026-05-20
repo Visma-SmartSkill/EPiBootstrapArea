@@ -3,7 +3,13 @@
 
 namespace TechFellow.Optimizely.AdvancedContentArea;
 
+/// <summary>
+/// Marks content that should be hidden in the content area when it renders no output.
+/// </summary>
 public interface IControlVisibility
 {
+    /// <summary>
+    /// When <see langword="true"/>, the renderer omits the block wrapper when the rendered output is empty.
+    /// </summary>
     bool HideIfEmpty { get; }
 }

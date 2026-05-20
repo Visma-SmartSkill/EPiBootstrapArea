@@ -5,8 +5,16 @@ using System;
 
 namespace TechFellow.Optimizely.AdvancedContentArea;
 
+/// <summary>
+/// Sets the default display option for a block type when placed in a content area.
+/// </summary>
 public class DefaultDisplayOptionAttribute : Attribute
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DefaultDisplayOptionAttribute"/> class.
+    /// </summary>
+    /// <param name="displayOption">The display option identifier.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="displayOption"/> is null or whitespace.</exception>
     public DefaultDisplayOptionAttribute(string displayOption)
     {
         if (string.IsNullOrWhiteSpace(displayOption))
@@ -17,5 +25,6 @@ public class DefaultDisplayOptionAttribute : Attribute
         DisplayOption = displayOption;
     }
 
+    /// <summary>The default display option identifier.</summary>
     public string DisplayOption { get; }
 }

@@ -6,8 +6,12 @@ using System.Collections.Generic;
 
 namespace TechFellow.Optimizely.AdvancedContentArea;
 
+/// <summary>
+/// Compares <see cref="DisplayModeFallback"/> instances by responsive column widths and tag.
+/// </summary>
 public class DisplayModeFallbackComparer : IEqualityComparer<DisplayModeFallback>
 {
+    /// <inheritdoc />
     public bool Equals(DisplayModeFallback x, DisplayModeFallback y)
     {
         return x.LargeScreenWidth == y.LargeScreenWidth
@@ -17,6 +21,7 @@ public class DisplayModeFallbackComparer : IEqualityComparer<DisplayModeFallback
                && x.Tag == y.Tag;
     }
 
+    /// <inheritdoc />
     public int GetHashCode(DisplayModeFallback obj)
     {
         if (obj == null)

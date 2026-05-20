@@ -5,8 +5,12 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 
 namespace TechFellow.Optimizely.AdvancedContentArea.Providers;
 
+/// <summary>
+/// Copies <see cref="DefaultDisplayOptionAttribute"/> values into model metadata for <see cref="ContentArea"/> properties.
+/// </summary>
 public class DefaultDisplayOptionMetadataProvider : IDisplayMetadataProvider
 {
+    /// <inheritdoc />
     public void CreateDisplayMetadata(DisplayMetadataProviderContext context)
     {
         var modelMetadata = context.DisplayMetadata;

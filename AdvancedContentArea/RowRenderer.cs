@@ -10,8 +10,19 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace TechFellow.Optimizely.AdvancedContentArea;
 
+/// <summary>
+/// Groups content area items into Bootstrap rows based on cumulative column width.
+/// </summary>
 public class RowRenderer
 {
+    /// <summary>
+    /// Renders content area items in one or more Bootstrap rows, starting a new row when column width would exceed 12.
+    /// </summary>
+    /// <param name="contentAreaItems">Items to render.</param>
+    /// <param name="htmlHelper">The HTML helper for the current view.</param>
+    /// <param name="getTemplateTag">Resolves the display tag for each item.</param>
+    /// <param name="getColumnWidth">Resolves the Bootstrap column width for a tag.</param>
+    /// <param name="renderItems">Renders the items belonging to a single row.</param>
     public void Render(
         IEnumerable<ContentAreaItem> contentAreaItems,
         IHtmlHelper htmlHelper,

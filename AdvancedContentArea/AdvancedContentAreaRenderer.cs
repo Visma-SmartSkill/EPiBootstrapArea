@@ -18,6 +18,14 @@ using TechFellow.Optimizely.AdvancedContentArea.Providers;
 
 namespace TechFellow.Optimizely.AdvancedContentArea;
 
+/// <summary>
+/// Provides rendering functionality for content areas with extended features and customization options.
+/// </summary>
+/// <remarks>
+/// This class extends the default ContentAreaRenderer to provide advanced rendering capabilities, such as
+/// custom CSS class handling, template tagging, and support for display mode fallbacks. It allows for the
+/// customization of rendering behavior and content area structure.
+/// </remarks>
 public class AdvancedContentAreaRenderer : ContentAreaRenderer
 {
     private ContentAreaItem _currentContent;
@@ -26,6 +34,12 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
     private readonly IContentAreaLoader _contentAreaLoader;
     internal readonly AdvancedContentAreaRendererOptions Options;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AdvancedContentAreaRenderer"/> class.
+    /// </summary>
+    /// <param name="contentAreaLoader">Loads content referenced by content area items.</param>
+    /// <param name="fallbacks">Bootstrap display mode fallbacks used for layout and CSS classes.</param>
+    /// <param name="options">Renderer configuration options.</param>
     public AdvancedContentAreaRenderer(
         IContentAreaLoader contentAreaLoader,
         IReadOnlyCollection<DisplayModeFallback> fallbacks, AdvancedContentAreaRendererOptions options)
@@ -35,8 +49,10 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
         Options = options;
     }
 
+    /// <summary>Tag of the content area being rendered, taken from view data when not set on the model.</summary>
     public string ContentAreaTag { get; private set; }
 
+    /// <summary>Default display option for the current content area property, if configured.</summary>
     public string DefaultContentAreaDisplayOption { get; private set; }
 
     internal void SetElementStartTagRenderCallback(Action<HtmlNode, ContentAreaItem, IContentData> callback)
@@ -49,6 +65,7 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
         _fallbacks = displayOptions;
     }
 
+    /// <inheritdoc />
     public override void Render(IHtmlHelper htmlHelper, ContentArea contentArea)
     {
         if (contentArea == null || contentArea.IsEmpty)
@@ -92,6 +109,12 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
         viewContext.Writer.Write(tagBuilder.RenderEndTag());
     }
 
+    /// <summary>
+    /// Renders the items within a content area. The rendering can optionally support additional row-based markup
+    /// depending on the renderer options and the row support flag in the view data.
+    /// </summary>
+    /// <param name="htmlHelper">The HTML helper used to render the content area items.</param>
+    /// <param name="contentAreaItems">The collection of content area items to be rendered.</param>
     protected override void RenderContentAreaItems(IHtmlHelper htmlHelper, IEnumerable<ContentAreaItem> contentAreaItems)
     {
         var isRowSupported = htmlHelper.GetFlagValueFromViewData("rowsupport");
@@ -112,12 +135,21 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
                          base.RenderContentAreaItems);
     }
 
-    private IContentData? GetAreaItemContent(ContentAreaItem contentAreaItem)
+    private IContentData GetAreaItemContent(ContentAreaItem contentAreaItem)
     {
         if (contentAreaItem == null) return null;
         return _contentAreaLoader.LoadContent(contentAreaItem);
     }
 
+    /// <summary>
+    /// Renders a single content area item using the specified HTML elements and CSS class,
+    /// ensuring proper rendering context management and handling of temporary HTML output.
+    /// </summary>
+    /// <param name="htmlHelper">The HTML helper used for rendering the content area item.</param>
+    /// <param name="contentAreaItem">The individual content area item to render.</param>
+    /// <param name="templateTag">The template tag indicating the display option of the content area item.</param>
+    /// <param name="htmlTag">The HTML tag to wrap the rendered content area item.</param>
+    /// <param name="cssClass">The CSS class to apply to the wrapping HTML element.</param>
     protected override void RenderContentAreaItem(
         IHtmlHelper htmlHelper,
         ContentAreaItem contentAreaItem,
@@ -206,6 +238,12 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
         }
     }
 
+    /// <summary>
+    /// Retrieves the CSS class for a specified content area item, combining item-specific, tag-based, and base classes.
+    /// </summary>
+    /// <param name="htmlHelper">The HTML helper used for rendering the content area item.</param>
+    /// <param name="contentAreaItem">The content area item for which the CSS class will be retrieved.</param>
+    /// <returns>The combined CSS class string for the specified content area item.</returns>
     protected override string GetContentAreaItemCssClass(IHtmlHelper htmlHelper, ContentAreaItem contentAreaItem)
     {
         return GetItemCssClass(htmlHelper, contentAreaItem);
@@ -220,6 +258,13 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
             $"block {GetTypeSpecificCssClasses(contentAreaItem)}{(!string.IsNullOrEmpty(GetCssClassesForTag(contentAreaItem, tag)) ? " " + GetCssClassesForTag(contentAreaItem, tag) : "")}{(!string.IsNullOrEmpty(tag) ? " " + tag : "")}{(!string.IsNullOrEmpty(baseClasses) ? " " + baseClasses : "")}";
     }
 
+    /// <summary>
+    /// Retrieves the template tag for a specific content area item.
+    /// The template tag is a string that defines how the item should be rendered.
+    /// </summary>
+    /// <param name="htmlHelper">The HTML helper used to assist in rendering the content area item.</param>
+    /// <param name="contentAreaItem">The content area item for which the template tag is determined.</param>
+    /// <returns>A string representing the template tag associated with the content area item.</returns>
     protected override string GetContentAreaItemTemplateTag(IHtmlHelper htmlHelper, ContentAreaItem contentAreaItem)
     {
         return ContentAreaItemTemplateTagCore(htmlHelper, contentAreaItem);
@@ -243,6 +288,11 @@ public class AdvancedContentAreaRenderer : ContentAreaRenderer
             : templateTag;
     }
 
+    /// <summary>
+    /// Returns the content area item currently being rendered, caching the instance for nested render calls.
+    /// </summary>
+    /// <param name="contentAreaItem">The item to resolve.</param>
+    /// <returns>The active <see cref="ContentAreaItem"/>.</returns>
     protected virtual ContentAreaItem GetCurrentContent(ContentAreaItem contentAreaItem)
     {
         if (_currentContent == null || !_currentContent.ContentLink.CompareToIgnoreWorkID(contentAreaItem.ContentLink))

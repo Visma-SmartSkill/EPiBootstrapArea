@@ -7,8 +7,12 @@ using TechFellow.Optimizely.AdvancedContentArea.Providers;
 
 namespace TechFellow.Optimizely.AdvancedContentArea.Initialization;
 
+/// <summary>
+/// Registers MVC model metadata providers used by the advanced content area.
+/// </summary>
 public class ConfigureModelMetadataDetailsProviders : IConfigureOptions<MvcOptions>
 {
+    /// <inheritdoc />
     public void Configure(MvcOptions options)
     {
         options.ModelMetadataDetailsProviders.Add(new DefaultDisplayOptionMetadataProvider());

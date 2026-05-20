@@ -8,8 +8,12 @@ using Microsoft.AspNetCore.Html;
 
 namespace TechFellow.Optimizely.AdvancedContentArea;
 
-public class HtmlStringWriter :  StringWriter
+/// <summary>
+/// A <see cref="StringWriter"/> that encodes <see cref="IHtmlContent"/> values instead of calling <see cref="object.ToString"/>.
+/// </summary>
+public class HtmlStringWriter : StringWriter
 {
+    /// <inheritdoc />
     public override void Write(object value)
     {
         if (value is IHtmlContent content)

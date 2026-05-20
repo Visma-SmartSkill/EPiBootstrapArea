@@ -2,12 +2,17 @@
 // Licensed under Apache-2.0. See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
-//using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace TechFellow.Optimizely.AdvancedContentArea.Providers;
 
+/// <summary>
+/// Built-in display mode fallback presets for Bootstrap content areas.
+/// </summary>
 public static class DisplayOptions
 {
+    /// <summary>
+    /// Standard full-, half-, third-, quarter-, and related width display modes.
+    /// </summary>
     public static List<DisplayModeFallback> Default
     {
         get

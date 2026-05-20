@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace TechFellow.Optimizely.AdvancedContentArea;
 
+/// <summary>
+/// View helpers for reading display option context during content area rendering.
+/// </summary>
 public static class IHtmlHelperExtensions
 {
     internal static bool? GetFlagValueFromViewData(this IHtmlHelper htmlHelper, string key)
@@ -20,6 +23,13 @@ public static class IHtmlHelperExtensions
         return htmlHelper.ViewContext.ViewData.GetValueFromDictionary<string>(key);
     }
 
+    /// <summary>
+    /// Gets the display option currently stored in view data for the block being rendered.
+    /// </summary>
+    /// <param name="htmlHelper">The HTML helper.</param>
+    /// <param name="block">The block being rendered.</param>
+    /// <returns>The active <see cref="DisplayOption"/>, or <see langword="null"/> if none is set.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="htmlHelper"/> or <paramref name="block"/> is null.</exception>
     public static DisplayOption GetDisplayOption(this IHtmlHelper htmlHelper, BlockData block)
     {
         if (htmlHelper == null)
@@ -37,6 +47,11 @@ public static class IHtmlHelperExtensions
             : null;
     }
 
+    /// <summary>
+    /// Gets the zero-based index of the current block within the content area render pass.
+    /// </summary>
+    /// <param name="htmlHelper">The HTML helper.</param>
+    /// <returns>The block index, or -1 when not set in view data.</returns>
     public static int BlockIndex(this IHtmlHelper htmlHelper)
     {
         return (int?)htmlHelper.ViewData[Constants.BlockIndexViewDataKey] ?? -1;

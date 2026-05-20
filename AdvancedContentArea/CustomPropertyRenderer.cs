@@ -11,8 +11,12 @@ using TechFellow.Optimizely.AdvancedContentArea.Extensions;
 
 namespace TechFellow.Optimizely.AdvancedContentArea;
 
+/// <summary>
+/// Extends <see cref="PropertyRenderer"/> to support rendering edit-mode properties without an extra container when configured.
+/// </summary>
 public class CustomPropertyRenderer : PropertyRenderer
 {
+    /// <inheritdoc />
     protected override IHtmlContent GetHtmlForEditMode<TModel, TValue>(
         IHtmlHelper<TModel> html,
         string viewModelPropertyName,

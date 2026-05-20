@@ -9,9 +9,13 @@ using EPiServer.Web.Mvc.Html;
 
 namespace TechFellow.Optimizely.AdvancedContentArea;
 
+/// <summary>
+/// Validates that the combined Bootstrap column width of items in a <see cref="ContentArea"/> does not exceed 12 per row.
+/// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 public class BootstrapRowValidationAttribute : ValidationAttribute
 {
+    /// <inheritdoc />
     public override bool IsValid(object value)
     {
         var contentArea = value as ContentArea;
@@ -44,6 +48,7 @@ public class BootstrapRowValidationAttribute : ValidationAttribute
         return true;
     }
 
+    /// <inheritdoc />
     protected override ValidationResult IsValid(object value, ValidationContext validationContext)
     {
         var result = base.IsValid(value, validationContext);
@@ -56,6 +61,11 @@ public class BootstrapRowValidationAttribute : ValidationAttribute
         return result;
     }
 
+    /// <summary>
+    /// Resolves the Bootstrap column width for a display option tag using the registered <see cref="AdvancedContentAreaRenderer"/>.
+    /// </summary>
+    /// <param name="tag">The display option tag.</param>
+    /// <returns>Column width (1–12), or 12 if the advanced renderer is not registered.</returns>
     public static int GetDisplayOptionTag(string tag)
     {
         // I love DI
