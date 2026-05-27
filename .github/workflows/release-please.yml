@@ -1,0 +1,168 @@
+name: release-please
+
+on:
+  push:
+    branches:
+      - newmain
+
+env:
+  TARGET_BRANCH: newmain
+  MANIFEST: .release-please-manifest.json
+  CONFIG_IN: release-please-config.json
+  CONFIG_OUT: release-please-config.runtime.json
+  NUGET_SOURCE: https://nuget.pkg.github.com/Visma-SmartSkill/index.json
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      paths_released: ${{ steps.release.outputs.paths_released }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: Fetch target branch
+        run: git fetch origin "${TARGET_BRANCH}"
+
+      - name: Prepare release-please config
+        id: prepare
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          resolve_base_sha() {
+            local remote_ref="origin/${TARGET_BRANCH}"
+            if git rev-parse --verify "${remote_ref}" >/dev/null 2>&1; then
+              local base head_sha
+              base="$(git merge-base HEAD "${remote_ref}")"
+              head_sha="$(git rev-parse HEAD)"
+              if [ "${base}" != "${head_sha}" ]; then
+                echo "${base}"
+                return
+              fi
+            fi
+            local tag
+            tag="$(git tag -l 'contentarea-v*' 'forms-v*' --sort=-version:refname | head -1 || true)"
+            if [ -n "${tag}" ]; then
+              git rev-parse "${tag}"
+              return
+            fi
+            jq -r '."bootstrap-sha"' "${CONFIG_IN}"
+          }
+
+          has_breaking_since() {
+            local since="$1"
+            git log --format='%s%n%b' "${since}..HEAD" \
+              | grep -qE '(^[^ ]+(\([^)]+\))?!:)|(BREAKING CHANGE:)'
+          }
+
+          base_sha="$(resolve_base_sha)"
+          sync_major=false
+          if has_breaking_since "${base_sha}"; then
+            sync_major=true
+          else
+            while IFS= read -r pkg; do
+              log="$(git log --format='%s%n%b' "${base_sha}..HEAD" -- "${pkg}")"
+              if grep -qE '(^[^ ]+(\([^)]+\))?!:)|(BREAKING CHANGE:)' <<< "${log}" \
+                || grep -qE '^feat(\([^)]+\))?!:' <<< "${log}" \
+                || grep -qE '^fix(\([^)]+\))?!:' <<< "${log}"; then
+                sync_major=true
+                break
+              fi
+            done < <(jq -r 'keys[]' "${MANIFEST}")
+          fi
+
+          if [ "${sync_major}" = true ]; then
+            echo "Breaking change detected — all packages will major-bump together."
+            jq '.plugins = [{"type":"linked-versions","groupName":"AdvancedContentArea","components":["ContentArea","Forms"]}]' \
+              "${CONFIG_IN}" > "${CONFIG_OUT}"
+          else
+            jq 'del(.plugins)' "${CONFIG_IN}" > "${CONFIG_OUT}"
+          fi
+
+          echo "sync_major=${sync_major}" >> "${GITHUB_OUTPUT}"
+          echo "config_file=${CONFIG_OUT}" >> "${GITHUB_OUTPUT}"
+
+      - name: Release Please
+        id: release
+        uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target-branch: ${{ env.TARGET_BRANCH }}
+          config-file: ${{ steps.prepare.outputs.config_file }}
+          manifest-file: ${{ env.MANIFEST }}
+
+  publish-nuget:
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: >-
+      needs.release-please.outputs.releases_created == 'true' &&
+      needs.release-please.outputs.paths_released != '[]' &&
+      needs.release-please.outputs.paths_released != ''
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJson(needs.release-please.outputs.paths_released) }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7
+        with:
+          dotnet-version: "10.0.x"
+          dotnet-quality: ga
+
+      - name: Add NuGet source
+        shell: bash
+        run: |
+          dotnet nuget remove source GithubVSS 2>/dev/null || true
+          dotnet nuget add source "${NUGET_SOURCE}" \
+            --name GithubVSS \
+            --username github \
+            --password "${{ secrets.GITHUB_TOKEN }}" \
+            --store-password-in-clear-text
+
+      - name: Build and push ${{ matrix.package }}
+        shell: bash
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          set -euo pipefail
+          project="${PACKAGE}/${PACKAGE}.csproj"
+          out_dir="${GITHUB_WORKSPACE}/${PACKAGE}/nupkg"
+          mkdir -p "${out_dir}"
+
+          dotnet restore "${project}"
+          dotnet build "${project}" \
+            --configuration Release \
+            --no-restore \
+            /p:GeneratePackageOnBuild=true \
+            /p:PackageOutputPath="${out_dir}" \
+            /p:IncludeSymbols=false
+
+          shopt -s nullglob
+          files=("${out_dir}/"*.nupkg)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No .nupkg in ${out_dir}. Searching..."
+            find "${PACKAGE}" -name '*.nupkg' -not -path '*/bin/Debug/*' || true
+            exit 1
+          fi
+
+          for file in "${files[@]}"; do
+            echo "Pushing ${file}"
+            dotnet nuget push "${file}" \
+              --skip-duplicate \
+              --source "${NUGET_SOURCE}" \
+              --api-key "${{ secrets.GITHUB_TOKEN }}"
+          done
