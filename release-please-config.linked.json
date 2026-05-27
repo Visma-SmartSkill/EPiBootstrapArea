@@ -2,6 +2,13 @@
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "bootstrap-sha": "d0ce4ece8808aaa81a47d81ec413ec1e75deaab7",
   "separate-pull-requests": false,
+  "plugins": [
+    {
+      "type": "linked-versions",
+      "groupName": "AdvancedContentArea",
+      "components": ["ContentArea", "Forms"]
+    }
+  ],
   "packages": {
     "AdvancedContentArea": {
       "release-type": "go",
