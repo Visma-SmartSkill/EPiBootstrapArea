@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <Version>6.0.1</Version>
+    <Version>7.0.0</Version>
     <Authors>Valdis Iljuconoks, https://tech-fellow.net</Authors>
     <Company>Valdis Iljuconoks, https://tech-fellow.net</Company>
     <Product>AdvancedContentArea.Forms</Product>
@@ -25,22 +25,22 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="EPiServer.CMS.AspNetCore" Version="13.0.2" />
-    <PackageReference Include="EPiServer.CMS.AspNetCore.HtmlHelpers" Version="13.0.2" />
-    <PackageReference Include="EPiServer.CMS.UI.Core" Version="13.0.2" />
-    <PackageReference Include="EPiServer.Cms.TinyMce" Version="13.0.2" />
-    <PackageReference Include="EPiServer.Forms" Version="6.0.0" />
-    <PackageReference Include="MailKit" Version="4.16.0" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.203" PrivateAssets="All" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+    <PackageReference Include="EPiServer.CMS.AspNetCore" Version="13.0.2"/>
+    <PackageReference Include="EPiServer.CMS.AspNetCore.HtmlHelpers" Version="13.0.2"/>
+    <PackageReference Include="EPiServer.CMS.UI.Core" Version="13.0.2"/>
+    <PackageReference Include="EPiServer.Cms.TinyMce" Version="13.0.2"/>
+    <PackageReference Include="EPiServer.Forms" Version="6.0.0"/>
+    <PackageReference Include="MailKit" Version="4.16.0"/>
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4"/>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.203" PrivateAssets="All"/>
   </ItemGroup>
 
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <ItemGroup>
-      <DocFile Include="bin\$(Configuration)\$(TargetFramework)\*.xml" />
+      <DocFile Include="bin\$(Configuration)\$(TargetFramework)\*.xml"/>
     </ItemGroup>
-    <Copy SourceFiles="@(DocFile)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="@(DocFile)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="false"/>
   </Target>
 
   <ItemGroup>
@@ -50,7 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AdvancedContentArea\AdvancedContentArea.csproj" />
+    <ProjectReference Include="..\AdvancedContentArea\AdvancedContentArea.csproj"/>
   </ItemGroup>
 
 </Project>
